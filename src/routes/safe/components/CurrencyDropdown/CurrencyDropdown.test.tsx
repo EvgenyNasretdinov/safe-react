@@ -2,7 +2,6 @@ import { fireEvent, render, screen, getByText, waitFor, queryByText } from 'src/
 import { CurrencyDropdown } from '.'
 import { history, ROOT_ROUTE } from 'src/routes/routes'
 import { mockedEndpoints } from 'src/setupTests'
-import { GATEWAY_URL } from 'src/utils/constants'
 
 const mockedAvailableCurrencies = ['USD', 'EUR', 'AED', 'AFN', 'ALL', 'ARS']
 const rinkebyNetworkId = '4'
@@ -23,8 +22,6 @@ describe('<CurrencyDropdown>', () => {
         available: true,
         account: '0x680cde08860141F9D223cE4E620B10Cd6741037E',
         network: '4',
-        smartContractWallet: false,
-        hardwareWallet: false,
       },
       currencyValues: {
         selectedCurrency: 'EUR',
@@ -48,8 +45,6 @@ describe('<CurrencyDropdown>', () => {
         available: true,
         account: '0x680cde08860141F9D223cE4E620B10Cd6741037E',
         network: '4',
-        smartContractWallet: false,
-        hardwareWallet: false,
       },
       currencyValues: {
         selectedCurrency: 'USD',
@@ -61,6 +56,9 @@ describe('<CurrencyDropdown>', () => {
             address: safeAddress,
           },
         },
+      },
+      currentSession: {
+        currentSafeAddress: safeAddress,
       },
     }
     render(<CurrencyDropdown testId="testId" />, customState)
@@ -88,7 +86,7 @@ describe('<CurrencyDropdown>', () => {
 
     // getBalances endpoint has been called
     expect(mockedEndpoints.getBalances).toBeCalledTimes(1)
-    expect(mockedEndpoints.getBalances).toBeCalledWith(GATEWAY_URL, rinkebyNetworkId, safeAddress, selectedCurrency, {
+    expect(mockedEndpoints.getBalances).toBeCalledWith(rinkebyNetworkId, safeAddress, selectedCurrency, {
       exclude_spam: true,
       trusted: false,
     })
@@ -110,8 +108,6 @@ describe('<CurrencyDropdown>', () => {
         available: true,
         account: '0x680cde08860141F9D223cE4E620B10Cd6741037E',
         network: '4',
-        smartContractWallet: false,
-        hardwareWallet: false,
       },
       currencyValues: {
         selectedCurrency: 'USD',

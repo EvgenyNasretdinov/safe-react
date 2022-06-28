@@ -10,7 +10,6 @@ import {
   isMultiSigExecutionDetails,
 } from 'src/logic/safe/store/models/types/gateway.d'
 import { NOT_AVAILABLE } from './utils'
-import TxShareButton from './TxShareButton'
 import TxInfoMultiSend from './TxInfoMultiSend'
 import DelegateCallWarning from './DelegateCallWarning'
 import { TxDataRow } from 'src/routes/safe/components/Transactions/TxList/TxDataRow'
@@ -58,11 +57,6 @@ export const TxSummary = ({ txDetails }: Props): ReactElement => {
 
   return (
     <>
-      {isMultiSigExecutionDetails(txDetails.detailedExecutionInfo) && (
-        <div className="tx-share">
-          <TxShareButton safeTxHash={txDetails.detailedExecutionInfo.safeTxHash} />
-        </div>
-      )}
       {txData?.operation === Operation.DELEGATE && (
         <div className="tx-operation">
           <DelegateCallWarning showWarning={!txData.trustedDelegateCallTarget} />

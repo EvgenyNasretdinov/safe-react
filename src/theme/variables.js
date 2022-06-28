@@ -1,4 +1,3 @@
-const background = '#f7f5f5'
 const border = '#e8e7e6'
 const connectedColor = '#008C73'
 const disabled = '#5D6D74'
@@ -10,22 +9,25 @@ const lg = '24px'
 const marginButtonImg = '12px'
 const md = '16px'
 const primary = '#001428'
+const primaryLite = '#EFFAF8'
+const primaryActive = '#008C73'
 const secondary = '#008C73'
 const secondaryTextOrSvg = '#B2B5B2'
 const secondaryBackground = '#f0efee'
 const sm = '8px'
 const warningColor = '#ffc05f'
+const alertWarningColor = '#FBE5C5'
+const infoColor = '#ECF5F4'
 const xl = '32px'
 const xs = '4px'
 const xxl = '40px'
 
-const grey500 = '#E2E3E3'
-const black400 = '#566976'
-const black600 = '#111B22'
-
 module.exports = {
-  background,
+  background: '#F6F7F8',
   black300: '#B2BBC0',
+  black400: '#566976',
+  black500: '#162D45',
+  black600: '#111B22',
   boldFont: 700,
   bolderFont: 500,
   border,
@@ -42,7 +44,10 @@ module.exports = {
   fontSizeHeadingMd: 20,
   fontSizeHeadingSm: 16,
   fontSizeHeadingXs: 13,
-  gray500: '#e2e3e3',
+  grey400: '#EEEFF0',
+  gray500: '#E2E3E3',
+  green200: '#EFFAF1',
+  green500: '#008C30',
   headerHeight,
   largeFontSize: '16px',
   lg,
@@ -52,8 +57,14 @@ module.exports = {
   md,
   mediumFontSize: '14px',
   orange500: '#e8663d',
+  orange200: '#FFF4E3',
   primary,
-  primary400: '#008C73',
+  primaryLite,
+  primaryActive,
+  primary200: primaryLite,
+  primary300: '#92C9BE',
+  primary400: primaryActive,
+  infoColor,
   regularFont: 400,
   red400: '#C31717',
   screenLg: 1200,
@@ -70,11 +81,9 @@ module.exports = {
   sm,
   smallFontSize: '12px',
   warning: warningColor,
+  alertWarning: alertWarningColor,
   xl,
   xs,
   xxl,
   xxlFontSize: '32px',
-  grey500,
-  black400,
-  black600,
 }

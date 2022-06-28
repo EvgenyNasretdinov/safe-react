@@ -11,10 +11,11 @@ import { Dispatch, DispatchReturn } from './types'
 import { Confirmation } from 'src/logic/safe/store/models/types/confirmation'
 import { TxSender } from './createTransaction'
 import { logError, Errors } from 'src/logic/exceptions/CodedException'
+import { TX_NOTIFICATION_TYPES } from '../../transactions'
 
 interface ProcessTransactionArgs {
   approveAndExecute: boolean
-  notifiedTransaction: string
+  notifiedTransaction: TX_NOTIFICATION_TYPES
   safeAddress: string
   tx: {
     id: string
@@ -90,6 +91,6 @@ export const processTransaction = (props: ProcessTransactionArgs): ProcessTransa
 
     sender.safeTxHash = tx.safeTxHash
 
-    sender.submitTx(state)
+    sender.submitTx()
   }
 }

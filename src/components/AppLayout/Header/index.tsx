@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { useSelector, useDispatch } from 'react-redux'
+import { lazy, useEffect } from 'react'
+import { useSelector } from 'react-redux'
 
 import Layout from './components/Layout'
 import ConnectDetails from './components/ProviderDetails/ConnectDetails'
@@ -14,9 +14,14 @@ import {
   userAccountSelector,
   userEnsSelector,
 } from 'src/logic/wallets/store/selectors'
-import { removeProvider } from 'src/logic/wallets/store/actions'
-import onboard from 'src/logic/wallets/onboard'
-import { loadLastUsedProvider } from 'src/logic/wallets/store/middlewares/providerWatcher'
+import onboard, { loadLastUsedProvider, removeLastUsedProvider } from 'src/logic/wallets/onboard'
+import { isSupportedWallet } from 'src/logic/wallets/utils/walletList'
+import { initPairing, isPairingSupported } from 'src/logic/wallets/pairing/utils'
+import { wrapInSuspense } from 'src/utils/wrapInSuspense'
+
+const HidePairingModule = lazy(
+  () => import('src/components/AppLayout/Header/components/ProviderDetails/HidePairingModule'),
+)
 
 const HeaderComponent = (): React.ReactElement => {
   const provider = useSelector(providerNameSelector)
@@ -25,13 +30,15 @@ const HeaderComponent = (): React.ReactElement => {
   const ensName = useSelector(userEnsSelector)
   const loaded = useSelector(loadedSelector)
   const available = useSelector(availableSelector)
-  const dispatch = useDispatch()
 
   useEffect(() => {
     const tryToConnectToLastUsedProvider = async () => {
       const lastUsedProvider = loadLastUsedProvider()
-      if (lastUsedProvider) {
+      const isProviderEnabled = lastUsedProvider && isSupportedWallet(lastUsedProvider)
+      if (isProviderEnabled) {
         await onboard().walletSelect(lastUsedProvider)
+      } else if (isPairingSupported()) {
+        await initPairing()
       }
     }
 
@@ -44,7 +51,8 @@ const HeaderComponent = (): React.ReactElement => {
   }
 
   const onDisconnect = () => {
-    dispatch(removeProvider())
+    onboard().walletReset()
+    removeLastUsedProvider()
   }
 
   const getProviderInfoBased = () => {
@@ -57,7 +65,7 @@ const HeaderComponent = (): React.ReactElement => {
 
   const getProviderDetailsBased = () => {
     if (!loaded) {
-      return <ConnectDetails />
+      return <ConnectDetails vertical />
     }
 
     return (
@@ -75,7 +83,12 @@ const HeaderComponent = (): React.ReactElement => {
   const info = getProviderInfoBased()
   const details = getProviderDetailsBased()
 
-  return <Layout providerDetails={details} providerInfo={info} />
+  return (
+    <>
+      {isPairingSupported() && wrapInSuspense(<HidePairingModule />)}
+      <Layout providerDetails={details} providerInfo={info} />
+    </>
+  )
 }
 
 export default HeaderComponent

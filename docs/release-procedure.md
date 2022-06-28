@@ -4,6 +4,8 @@ We prepare at least one release every sprint. Sprints are two weeks long.
 
 ### Prepare a branch
 * Create a code-freeze branch named `release/X.Y.Z`
+  * If it's a regular release, this branch is typically based off of `dev`
+  * For hot fixes, it would be `main` + cherry-picked commits
 * Bump the version in the `package.json`
 * Create a PR with the list of changes
 
@@ -15,10 +17,24 @@ git log origin/main..origin/dev --pretty=format:'* %s'
 ### QA
 * The QA team do regression testing on this branch
 * If issues are found, bugfixes are merged into this branch
-* Once the QA is done, we push the branch to `main`
-* `main` is automatically deployed to staging – some extra QA can be done there if needed
+* Once the QA is done, proceed to the next step
 
 ### Tag & release
+Wait for all the checks on GitHub to pass.
+* Switch to the main branch and make sure it's up to date:
+```
+git checkout main
+git fetch --all
+git reset --hard origin/main
+```
+* Pull from the release branch:
+```
+git pull origin release/3.15.0
+```
+* Push to main:
+```
+git push origin main
+```
 * Create and push a new version tag :
 ```
 git tag v3.15.0

@@ -6,10 +6,18 @@ import Img from 'src/components/layout/Img'
 import InfoIcon from 'src/assets/icons/info_red.svg'
 
 import { useSelector } from 'react-redux'
-import { currentSafeThreshold } from 'src/logic/safe/store/selectors'
 import { shouldSwitchWalletChain } from 'src/logic/wallets/store/selectors'
-import { grantedSelector } from 'src/routes/safe/container/selector'
+import { grantedSelector, sameAddressAsSafeSelector } from 'src/routes/safe/container/selector'
 import { EstimationStatus } from 'src/logic/hooks/useEstimateTransactionGas'
+
+enum ErrorMessage {
+  general = 'This transaction will most likely fail.',
+  creation = 'To save gas costs, avoid creating the transaction.',
+  execution = 'To save gas costs, reject this transaction.',
+  notOwner = `You are currently not an owner of this Safe and won't be able to submit this transaction.`,
+  wrongChain = 'Your wallet is connected to the wrong chain.',
+  sameAddress = `Cannot execute a transaction from the Safe itself, please connect a different account.`,
+}
 
 const styles = createStyles({
   executionWarningRow: {
@@ -35,27 +43,27 @@ export const TransactionFailText = ({
   estimationStatus,
 }: TransactionFailTextProps): React.ReactElement | null => {
   const classes = useStyles()
-  const threshold = useSelector(currentSafeThreshold)
   const isWrongChain = useSelector(shouldSwitchWalletChain)
-  const isGranted = useSelector(grantedSelector)
+  const isOwner = useSelector(grantedSelector)
+  const isSameAddressAsSafe = useSelector(sameAddressAsSafeSelector)
 
-  if (estimationStatus !== EstimationStatus.FAILURE && !(isCreation && !isGranted)) {
-    return null
-  }
+  const showError =
+    isWrongChain ||
+    (isExecution && estimationStatus === EstimationStatus.FAILURE) ||
+    (isCreation && !isOwner) ||
+    isSameAddressAsSafe
+  if (!showError) return null
 
-  let errorDesc = 'To save gas costs, avoid creating the transaction.'
-  if (isExecution) {
-    errorDesc =
-      threshold && threshold > 1
-        ? `To save gas costs, reject this transaction`
-        : `To save gas costs, avoid executing the transaction.`
-  }
+  const errorDesc = isCreation ? ErrorMessage.creation : ErrorMessage.execution
+  const defaultMsg = `${ErrorMessage.general} ${errorDesc}`
 
-  const defaultMsg = `This transaction will most likely fail. ${errorDesc}`
-  const notOwnerMsg = `You are currently not an owner of this Safe and won't be able to submit this transaction.`
-  const wrongChainMsg = 'Your wallet is connected to the wrong chain.'
-
-  const error = isGranted ? defaultMsg : isWrongChain ? wrongChainMsg : isCreation ? notOwnerMsg : defaultMsg
+  const error = isWrongChain
+    ? ErrorMessage.wrongChain
+    : isCreation && !isOwner
+    ? ErrorMessage.notOwner
+    : isSameAddressAsSafe
+    ? ErrorMessage.sameAddress
+    : defaultMsg
 
   return (
     <Row align="center">
@@ -66,3 +74,6 @@ export const TransactionFailText = ({
     </Row>
   )
 }
+
+// For tests
+export const _ErrorMessage = ErrorMessage

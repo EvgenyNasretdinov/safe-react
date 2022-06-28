@@ -1,146 +1,170 @@
-import {
-  checkIfTxIsApproveAndExecution,
-  checkIfTxIsCreation,
-  calculateTotalGasCost,
-} from 'src/logic/hooks/useEstimateTransactionGas'
+import { calculateTotalGasCost, useEstimateTransactionGas } from 'src/logic/hooks/useEstimateTransactionGas'
+import { renderHook } from '@testing-library/react-hooks'
+import { DEFAULT_MAX_GAS_FEE, DEFAULT_MAX_PRIO_FEE } from 'src/logic/wallets/ethTransactions'
+import { fromWei, toWei } from 'web3-utils'
+import * as ethTransactions from 'src/logic/wallets/ethTransactions'
+import * as gas from 'src/logic/safe/transactions/gas'
+import { waitFor } from 'src/utils/test-utils'
 
-describe('checkIfTxIsCreation', () => {
-  it(`should return true if there are no confirmations for the transaction and the transaction is not spendingLimit`, () => {
-    // given
-    const transactionConfirmations = 0
-    const transactionType = ''
-
-    // when
-    const result = checkIfTxIsCreation(transactionConfirmations, transactionType)
-
-    // then
-    expect(result).toBe(true)
-  })
-  it(`should return false if there are no confirmations for the transaction and the transaction is spendingLimit`, () => {
-    // given
-    const transactionConfirmations = 0
-    const transactionType = 'spendingLimit'
-
-    // when
-    const result = checkIfTxIsCreation(transactionConfirmations, transactionType)
-
-    // then
-    expect(result).toBe(false)
-  })
-  it(`should return false if there are confirmations for the transaction`, () => {
-    // given
-    const transactionConfirmations = 2
-    const transactionType = ''
-
-    // when
-    const result = checkIfTxIsCreation(transactionConfirmations, transactionType)
-
-    // then
-    expect(result).toBe(false)
-  })
+jest.mock('react-redux', () => {
+  const original = jest.requireActual('react-redux')
+  return {
+    ...original,
+    useSelector: jest.fn,
+  }
 })
 
-describe('checkIfTxIsApproveAndExecution', () => {
-  const mockedEthAccount = '0x29B1b813b6e84654Ca698ef5d7808E154364900B'
-  it(`should return true if there is only one confirmation left to reach the safe threshold and there is a preApproving account`, () => {
-    // given
-    const transactionConfirmations = 2
-    const safeThreshold = 3
-    const transactionType = ''
-    const preApprovingOwner = mockedEthAccount
+describe('useEstimateTransactionGas', () => {
+  let mockParams
+  let initialState
+  let failureState
 
-    // when
-    const result = checkIfTxIsApproveAndExecution(
-      safeThreshold,
-      transactionConfirmations,
-      transactionType,
-      preApprovingOwner,
+  beforeAll(() => {
+    mockParams = {
+      txData: 'mocktxdata',
+      isExecution: true,
+    }
+    initialState = {
+      gasPrice: undefined,
+      gasPriceFormatted: undefined,
+      gasMaxPrioFee: undefined,
+      gasMaxPrioFeeFormatted: undefined,
+    }
+    failureState = {
+      gasPrice: DEFAULT_MAX_GAS_FEE.toString(),
+      gasPriceFormatted: fromWei(DEFAULT_MAX_GAS_FEE.toString(), 'gwei'),
+      gasMaxPrioFee: DEFAULT_MAX_PRIO_FEE.toString(),
+      gasMaxPrioFeeFormatted: fromWei(DEFAULT_MAX_PRIO_FEE.toString(), 'gwei'),
+    }
+  })
+
+  let gasPriceEstimationSpy, prioFeeEstimationSpy
+  beforeEach(() => {
+    gasPriceEstimationSpy = jest.spyOn(ethTransactions, 'calculateGasPrice').mockImplementation(() => {
+      return Promise.resolve('0')
+    })
+    prioFeeEstimationSpy = jest.spyOn(ethTransactions, 'getFeesPerGas').mockImplementation(() => {
+      return Promise.resolve({
+        maxPriorityFeePerGas: 0,
+        maxFeePerGas: 0,
+      })
+    })
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
+  it('returns initial estimation if tx is not execution', () => {
+    const { result } = renderHook(() => useEstimateTransactionGas({ ...mockParams, isExecution: false }))
+
+    expect(result.current).toStrictEqual(initialState)
+  })
+
+  it('estimates gas price and max priority fee', async () => {
+    renderHook(() => useEstimateTransactionGas(mockParams))
+
+    await waitFor(() => {
+      expect(gasPriceEstimationSpy).toHaveBeenCalledTimes(1)
+      expect(prioFeeEstimationSpy).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  it('returns manualGasPrice in Wei if it exists instead of estimation', async () => {
+    const mockManualGasPrice = '1'
+    const mockGasPrice = toWei(mockManualGasPrice, 'gwei')
+
+    const { result } = renderHook(() =>
+      useEstimateTransactionGas({ ...mockParams, manualGasPrice: mockManualGasPrice }),
     )
 
-    // then
-    expect(result).toBe(true)
+    await waitFor(() => {
+      expect(result.current.gasPrice).toBe(mockGasPrice)
+      expect(gasPriceEstimationSpy).toHaveBeenCalledTimes(0)
+    })
   })
-  it(`should return false if there is only one confirmation left to reach the safe threshold and but there is no preApproving account`, () => {
-    // given
-    const transactionConfirmations = 2
-    const safeThreshold = 3
-    const transactionType = ''
 
-    // when
-    const result = checkIfTxIsApproveAndExecution(safeThreshold, transactionConfirmations, transactionType)
+  it('returns manualMaxPrioFee post EIP-1559 if it exists instead of estimation', async () => {
+    jest.spyOn(gas, 'isMaxFeeParam').mockImplementation(() => true)
+    const mockManualMaxPrioFee = '1'
+    const mockMaxPrioFee = toWei(mockManualMaxPrioFee, 'gwei')
 
-    // then
-    expect(result).toBe(false)
-  })
-  it(`should return true if the transaction is spendingLimit and there is a preApproving account`, () => {
-    // given
-    const transactionConfirmations = 0
-    const transactionType = 'spendingLimit'
-    const safeThreshold = 3
-    const preApprovingOwner = mockedEthAccount
-
-    // when
-    const result = checkIfTxIsApproveAndExecution(
-      safeThreshold,
-      transactionConfirmations,
-      transactionType,
-      preApprovingOwner,
+    const { result } = renderHook(() =>
+      useEstimateTransactionGas({ ...mockParams, manualMaxPrioFee: mockManualMaxPrioFee }),
     )
 
-    // then
-    expect(result).toBe(true)
+    await waitFor(() => {
+      expect(result.current.gasMaxPrioFee).toBe(mockMaxPrioFee)
+      expect(prioFeeEstimationSpy).toHaveBeenCalledTimes(0)
+    })
   })
-  it(`should return false if the transaction is spendingLimit and there is no preApproving account`, () => {
-    // given
-    const transactionConfirmations = 0
-    const transactionType = 'spendingLimit'
-    const safeThreshold = 3
-    const preApprovingOwner = mockedEthAccount
 
-    // when
-    const result = checkIfTxIsApproveAndExecution(
-      safeThreshold,
-      transactionConfirmations,
-      transactionType,
-      preApprovingOwner,
-    )
+  it('returns 0 for maxPrioFee pre EIP-1559', async () => {
+    jest.spyOn(gas, 'isMaxFeeParam').mockImplementation(() => false)
 
-    // then
-    expect(result).toBe(true)
+    const { result } = renderHook(() => useEstimateTransactionGas(mockParams))
+
+    await waitFor(() => {
+      expect(result.current.gasMaxPrioFee).toBe('0')
+      expect(prioFeeEstimationSpy).toHaveBeenCalledTimes(0)
+    })
   })
-  it(`should return false if the are missing more than one confirmations to reach the safe threshold and the transaction is not spendingLimit`, () => {
-    // given
-    const transactionConfirmations = 0
-    const transactionType = ''
-    const safeThreshold = 3
 
-    // when
-    const result = checkIfTxIsApproveAndExecution(safeThreshold, transactionConfirmations, transactionType)
+  it('returns 0 for maxPrioFee pre EIP-1559 if calculateGasPrice throws', async () => {
+    jest.spyOn(gas, 'isMaxFeeParam').mockImplementation(() => false)
+    jest.spyOn(ethTransactions, 'calculateGasPrice').mockImplementation(() => {
+      throw new Error()
+    })
 
-    // then
-    expect(result).toBe(false)
+    const { result } = renderHook(() => useEstimateTransactionGas(mockParams))
+
+    await waitFor(() => {
+      expect(result.current.gasMaxPrioFee).toBe('0')
+      expect(result.current.gasMaxPrioFeeFormatted).toBe('0')
+      expect(prioFeeEstimationSpy).toHaveBeenCalledTimes(0)
+    })
+  })
+
+  it('returns failure state if getFeesPerGas throws', async () => {
+    jest.spyOn(gas, 'isMaxFeeParam').mockImplementation(() => true)
+    jest.spyOn(ethTransactions, 'getFeesPerGas').mockImplementation(() => {
+      throw new Error()
+    })
+
+    const { result } = renderHook(() => useEstimateTransactionGas(mockParams))
+
+    await waitFor(() => {
+      expect(result.current).toStrictEqual(failureState)
+    })
   })
 })
 
 describe('calculateTotalGasCost', () => {
   it('calculates total gas cost for pre-EIP-1559 txns', () => {
-    const [gasCost, gasCostFormatted] = calculateTotalGasCost('53160', '264000000000', '0', 18)
+    const { gasCost, gasCostFormatted } = calculateTotalGasCost('53160', '264000000000', '0', 18)
 
     expect(gasCost).toBe('0.01403424')
     expect(gasCostFormatted).toBe('0.01403')
   })
 
   it('calculates total gas cost for EIP-1559 txns', () => {
-    const [gasCost, gasCostFormatted] = calculateTotalGasCost('53160', '264000000000', '2500000000', 18)
+    const { gasCost, gasCostFormatted } = calculateTotalGasCost('53160', '264000000000', '2500000000', 18)
 
     expect(gasCost).toBe('0.01416714')
     expect(gasCostFormatted).toBe('0.01417')
   })
 
   it('calculates total gas cost with a non-default max prio fee', () => {
-    const [gasCost, gasCostFormatted] = calculateTotalGasCost('53160', '264000000000', '1000000000000', 18)
+    const { gasCost, gasCostFormatted } = calculateTotalGasCost('53160', '264000000000', '1000000000000', 18)
 
     expect(gasCost).toBe('0.06719424')
     expect(gasCostFormatted).toBe('0.06719')
+  })
+
+  it('returns 0 if gasLimit is 0', () => {
+    const { gasCost, gasCostFormatted } = calculateTotalGasCost('0', '264000000000', '1000000000000', 18)
+
+    expect(gasCost).toBe('0')
+    expect(gasCostFormatted).toBe('0')
   })
 })

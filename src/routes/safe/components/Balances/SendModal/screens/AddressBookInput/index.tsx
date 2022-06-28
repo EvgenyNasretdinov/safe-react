@@ -166,10 +166,10 @@ const BaseAddressBookInput = ({
       renderInput={(params) => (
         <MuiTextField
           {...params}
-          autoFocus={true}
+          autoFocus
           error={!!validationText}
           fullWidth
-          variant="filled"
+          variant="outlined"
           label={validationText ? validationText : label}
           InputLabelProps={{ shrink: true, required: true, classes: labelStyles }}
           InputProps={{ ...params.InputProps, classes: inputStyles }}

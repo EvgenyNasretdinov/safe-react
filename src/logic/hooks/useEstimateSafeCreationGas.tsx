@@ -7,6 +7,7 @@ import { formatAmount } from 'src/logic/tokens/utils/formatAmount'
 import { calculateGasPrice, getFeesPerGas, setMaxPrioFeePerGas } from 'src/logic/wallets/ethTransactions'
 import { userAccountSelector } from '../wallets/store/selectors'
 import { getNativeCurrency } from 'src/config'
+import { isMaxFeeParam } from 'src/logic/safe/transactions/gas'
 
 type EstimateSafeCreationGasProps = {
   addresses: string[]
@@ -32,7 +33,7 @@ const estimateGas = async (
   const [gasEstimation, gasPrice, feesPerGas] = await Promise.all([
     estimateGasForDeployingSafe(addresses, numOwners, userAccount, safeCreationSalt),
     calculateGasPrice(),
-    getFeesPerGas(),
+    isMaxFeeParam() ? getFeesPerGas() : { maxPriorityFeePerGas: 0, maxFeePerGas: 0 },
   ])
 
   const estimatedGasCosts = gasEstimation * parseInt(gasPrice, 10)
@@ -58,7 +59,7 @@ export const useEstimateSafeCreationGas = ({
 }: EstimateSafeCreationGasProps): SafeCreationEstimationResult => {
   const [gasEstimation, setGasEstimation] = useState<SafeCreationEstimationResult>({
     gasEstimation: 0,
-    gasCostFormatted: '< 0.001',
+    gasCostFormatted: '> 0.001',
     gasLimit: 0,
     gasPrice: '0',
     gasMaxPrioFee: 0,

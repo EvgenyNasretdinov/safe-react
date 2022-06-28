@@ -17,6 +17,7 @@ interface RenderValueProps {
   method: string
   type: string
   value: string | string[]
+  key?: string
 }
 
 const GenericValue = ({ method, type, value }: RenderValueProps): React.ReactElement => {
@@ -30,6 +31,11 @@ const GenericValue = ({ method, type, value }: RenderValueProps): React.ReactEle
           const key = `${parentId}-value-${index}`
           return Array.isArray(currentValue) ? (
             <Text key={key} size="xl" as="span">
+              {index > 0 && (
+                <>
+                  ,<br />
+                </>
+              )}
               {getArrayValue(key, currentValue)}
             </Text>
           ) : (
@@ -55,10 +61,20 @@ const Value = ({ type, ...props }: RenderValueProps): React.ReactElement => {
         [
         <NestedWrapper>
           {(props.value as string[]).map((address, index) => {
+            const key = `${props.key || props.method}-${index}`
+            if (Array.isArray(address)) {
+              const newProps = {
+                type,
+                ...props,
+                value: address,
+                key,
+              }
+              return <Value {...newProps} />
+            }
             const explorerUrl = getExplorerInfo(address)
             return (
               <PrefixedEthHashInfo
-                key={`${address}_${index}`}
+                key={`${address}_${key}`}
                 textSize="xl"
                 hash={address}
                 showCopyBtn

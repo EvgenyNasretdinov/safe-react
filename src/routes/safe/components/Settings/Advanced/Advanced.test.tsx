@@ -1,4 +1,5 @@
 import { REMOVE_GUARD_BTN_TEST_ID } from 'src/routes/safe/components/Settings/Advanced/TransactionGuard'
+import * as safeContracts from 'src/logic/contracts/safeContracts'
 import { render, screen, getByText, fireEvent } from 'src/utils/test-utils'
 import { history } from 'src/routes/routes'
 import Advanced from '.'
@@ -31,6 +32,9 @@ jest.mock('src/logic/hooks/useEstimateTransactionGas', () => {
 })
 
 describe('Advanced Settings Component', () => {
+  beforeEach(() => {
+    jest.spyOn(safeContracts, 'getMultisendContractAddress').mockReturnValue('mockAddress')
+  })
   it('Renders Advanced Settings Component', () => {
     const customState = {
       providers: {
@@ -39,8 +43,6 @@ describe('Advanced Settings Component', () => {
         available: true,
         account: '0x680cde08860141F9D223cE4E620B10Cd6741037E',
         network: networkId,
-        smartContractWallet: false,
-        hardwareWallet: false,
       },
       safes: {
         safes: {
@@ -70,8 +72,6 @@ describe('Advanced Settings Component', () => {
           available: true,
           account: '0x680cde08860141F9D223cE4E620B10Cd6741037E',
           network: networkId,
-          smartContractWallet: false,
-          hardwareWallet: false,
         },
         safes: {
           safes: {
@@ -83,6 +83,9 @@ describe('Advanced Settings Component', () => {
               currentVersion: '1.3.0',
             },
           },
+        },
+        currentSession: {
+          currentSafeAddress: safeAddress,
         },
       }
 
@@ -99,8 +102,6 @@ describe('Advanced Settings Component', () => {
           available: true,
           account: '0x680cde08860141F9D223cE4E620B10Cd6741037E',
           network: networkId,
-          smartContractWallet: false,
-          hardwareWallet: false,
         },
         safes: {
           safes: {
@@ -128,8 +129,6 @@ describe('Advanced Settings Component', () => {
           available: true,
           account: '0x680cde08860141F9D223cE4E620B10Cd6741037E',
           network: networkId,
-          smartContractWallet: false,
-          hardwareWallet: false,
         },
         safes: {
           safes: {
@@ -141,6 +140,9 @@ describe('Advanced Settings Component', () => {
               currentVersion: '1.3.0',
             },
           },
+        },
+        currentSession: {
+          currentSafeAddress: safeAddress,
         },
       }
 
@@ -159,8 +161,6 @@ describe('Advanced Settings Component', () => {
           available: true,
           account: '0x680cde08860141F9D223cE4E620B10Cd6741037E',
           network: networkId,
-          smartContractWallet: false,
-          hardwareWallet: false,
         },
         safes: {
           safes: {
@@ -172,6 +172,9 @@ describe('Advanced Settings Component', () => {
               currentVersion: '1.3.0',
             },
           },
+        },
+        currentSession: {
+          currentSafeAddress: safeAddress,
         },
       }
 
@@ -193,8 +196,6 @@ describe('Advanced Settings Component', () => {
           available: true,
           account: userAccount,
           network: networkId,
-          smartContractWallet: false,
-          hardwareWallet: false,
         },
         safes: {
           safes: {
@@ -207,6 +208,9 @@ describe('Advanced Settings Component', () => {
               currentVersion: '1.3.0',
             },
           },
+        },
+        currentSession: {
+          currentSafeAddress: safeAddress,
         },
       }
 
@@ -232,8 +236,6 @@ describe('Advanced Settings Component', () => {
           available: true,
           account: '0x680cde08860141F9D223cE4E620B10Cd6741037E',
           network: networkId,
-          smartContractWallet: false,
-          hardwareWallet: false,
         },
         safes: {
           safes: {
@@ -262,8 +264,6 @@ describe('Advanced Settings Component', () => {
           available: true,
           account: '0x680cde08860141F9D223cE4E620B10Cd6741037E',
           network: networkId,
-          smartContractWallet: false,
-          hardwareWallet: false,
         },
         safes: {
           safes: {
@@ -275,6 +275,9 @@ describe('Advanced Settings Component', () => {
               modules: [['0x0000000000000000000000000000000000000001', safeModuleAddress]],
             },
           },
+        },
+        currentSession: {
+          currentSafeAddress: safeAddress,
         },
       }
 
@@ -295,8 +298,6 @@ describe('Advanced Settings Component', () => {
           available: true,
           account: '0x680cde08860141F9D223cE4E620B10Cd6741037E',
           network: networkId,
-          smartContractWallet: false,
-          hardwareWallet: false,
         },
         safes: {
           safes: {
@@ -308,6 +309,9 @@ describe('Advanced Settings Component', () => {
               currentVersion: '1.3.0',
             },
           },
+        },
+        currentSession: {
+          currentSafeAddress: safeAddress,
         },
       }
 

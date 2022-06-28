@@ -1,9 +1,10 @@
-import { SettingsChange } from '@gnosis.pm/safe-react-gateway-sdk'
+import { SettingsChange, SettingsInfo } from '@gnosis.pm/safe-react-gateway-sdk'
 import { ReactElement } from 'react'
 
 import { AddressInfo } from './AddressInfo'
 import { InfoDetails } from './InfoDetails'
 import { TxInfoDetails } from './TxInfoDetails'
+import ThresholdWarning from './ThresholdWarning'
 
 type TxInfoSettingsProps = {
   settingsInfo: SettingsChange['settingsInfo']
@@ -30,13 +31,13 @@ export const TxInfoSettings = ({ settingsInfo }: TxInfoSettingsProps): ReactElem
     case 'REMOVE_OWNER': {
       const title = settingsInfo.type === 'ADD_OWNER' ? 'Add owner:' : 'Remove owner:'
       return (
-        <InfoDetails title={title}>
+        <InfoDetails title={title} header={<ThresholdWarning />}>
           <AddressInfo
             address={settingsInfo.owner.value}
             name={settingsInfo.owner?.name || undefined}
             avatarUrl={settingsInfo.owner?.logoUri || undefined}
           />
-          <InfoDetails title="Change required confirmations:">{settingsInfo.threshold}</InfoDetails>
+          <InfoDetails title="Increase/decrease confirmation policy to:">{settingsInfo.threshold}</InfoDetails>
         </InfoDetails>
       )
     }
@@ -59,7 +60,11 @@ export const TxInfoSettings = ({ settingsInfo }: TxInfoSettingsProps): ReactElem
       )
     }
     case 'CHANGE_THRESHOLD': {
-      return <InfoDetails title="Change required confirmations:">{settingsInfo.threshold}</InfoDetails>
+      return (
+        <InfoDetails title="Increase/decrease confirmation policy to:" header={<ThresholdWarning />}>
+          {settingsInfo.threshold}
+        </InfoDetails>
+      )
     }
     case 'CHANGE_IMPLEMENTATION': {
       return (
@@ -85,7 +90,21 @@ export const TxInfoSettings = ({ settingsInfo }: TxInfoSettingsProps): ReactElem
         </InfoDetails>
       )
     }
+    case 'SET_GUARD': {
+      return (
+        <InfoDetails title="Set guard:">
+          <AddressInfo
+            address={settingsInfo.guard.value}
+            name={settingsInfo.guard?.name || undefined}
+            avatarUrl={settingsInfo.guard?.logoUri || undefined}
+          />
+        </InfoDetails>
+      )
+    }
+    case 'DELETE_GUARD': {
+      return <InfoDetails title="Delete guard">{null}</InfoDetails>
+    }
     default:
-      return null
+      return <InfoDetails title={(settingsInfo as SettingsInfo).type}>{null}</InfoDetails>
   }
 }

@@ -1,5 +1,6 @@
 // Icons
 import metamaskIcon from './icon-metamask.png'
+import tallyHoIcon from './icon-tallyho.svg'
 import walletConnectIcon from './icon-wallet-connect.svg'
 import trezorIcon from './icon-trezor.svg'
 import ledgerIcon from './icon-ledger.svg'
@@ -13,12 +14,17 @@ import coinbaseIcon from './icon-coinbase.svg'
 import operaIcon from './icon-opera.png'
 import squarelinkIcon from './icon-squarelink.png'
 import keystoneIcon from './icon-keystone.png'
+import safeMobileIcon from './icon-safe-mobile.svg'
 
 import { WALLET_PROVIDER } from 'src/logic/wallets/getWeb3'
 
 const WALLET_ICONS: { [key in WALLET_PROVIDER]: { src: string; height: number } } = {
   [WALLET_PROVIDER.METAMASK]: {
     src: metamaskIcon,
+    height: 25,
+  },
+  [WALLET_PROVIDER.TALLYHO]: {
+    src: tallyHoIcon,
     height: 25,
   },
   [WALLET_PROVIDER.WALLETCONNECT]: {
@@ -71,6 +77,10 @@ const WALLET_ICONS: { [key in WALLET_PROVIDER]: { src: string; height: number } 
   },
   [WALLET_PROVIDER.SQUARELINK]: {
     src: squarelinkIcon,
+    height: 25,
+  },
+  [WALLET_PROVIDER.SAFE_MOBILE]: {
+    src: safeMobileIcon,
     height: 25,
   },
 }

@@ -6,23 +6,27 @@ import styled from 'styled-components'
 import { ErrorFooter } from 'src/routes/opening/components/Footer'
 import { isConfirmationStep, steps } from './steps'
 
-import Button from 'src/components/layout/Button'
 import Heading from 'src/components/layout/Heading'
 import Img from 'src/components/layout/Img'
 import Paragraph from 'src/components/layout/Paragraph'
 import { EMPTY_DATA } from 'src/logic/wallets/ethTransactions'
-import { getWeb3, isTxPendingError } from 'src/logic/wallets/getWeb3'
+import { getWeb3ReadOnly, isTxPendingError } from 'src/logic/wallets/getWeb3'
 import { background, connected, fontColor } from 'src/theme/variables'
 import { providerNameSelector } from 'src/logic/wallets/store/selectors'
 
-import SuccessSvg from './assets/safe-created.svg'
+import SuccessSvg from 'src/assets/icons/safe-created.svg'
 import VaultErrorSvg from './assets/vault-error.svg'
 import VaultLoading from './assets/creation-process.gif'
 import { TransactionReceipt } from 'web3-core'
 import { Errors, logError } from 'src/logic/exceptions/CodedException'
 import { NOTIFICATIONS } from 'src/logic/notifications'
-import enqueueSnackbar from 'src/logic/notifications/store/actions/enqueueSnackbar'
+import { showNotification } from 'src/logic/notifications/store/notifications'
 import { getNewSafeAddressFromLogs } from 'src/routes/opening/utils/getSafeAddressFromLogs'
+import { getExplorerInfo } from 'src/config'
+import PrefixedEthHashInfo from 'src/components/PrefixedEthHashInfo'
+import { trackEvent } from 'src/utils/googleTagManager'
+import { CREATE_SAFE_EVENTS } from 'src/utils/events/createLoadSafe'
+import { isWalletRejection } from 'src/logic/wallets/errors'
 
 export const SafeDeployment = ({
   creationTxHash,
@@ -53,10 +57,10 @@ export const SafeDeployment = ({
   const showSnackbarError = useCallback(
     (err: Error) => {
       if (isTxPendingError(err)) {
-        dispatch(enqueueSnackbar({ ...NOTIFICATIONS.TX_PENDING_MSG }))
+        dispatch(showNotification(NOTIFICATIONS.TX_PENDING_MSG))
       } else {
         dispatch(
-          enqueueSnackbar({
+          showNotification({
             ...NOTIFICATIONS.CREATE_SAFE_FAILED_MSG,
             message: `${NOTIFICATIONS.CREATE_SAFE_FAILED_MSG.message} – ${err.message}`,
           }),
@@ -103,7 +107,7 @@ export const SafeDeployment = ({
     }
   }, [provider])
 
-  // creating safe from from submission
+  // creating safe from form submission
   useEffect(() => {
     if (submittedPromise === undefined) {
       return
@@ -117,6 +121,9 @@ export const SafeDeployment = ({
         setStepIndex(1)
         setIntervalStarted(true)
       } catch (err) {
+        if (isWalletRejection(err)) {
+          trackEvent(CREATE_SAFE_EVENTS.REJECT_CREATE_SAFE)
+        }
         onError(err)
       }
     }
@@ -139,16 +146,16 @@ export const SafeDeployment = ({
       return
     }
 
-    const isTxMined = async (txHash) => {
-      const web3 = getWeb3()
+    const isTxMined = async (txHash: string) => {
+      const web3 = getWeb3ReadOnly()
 
       const txResult = await web3.eth.getTransaction(txHash)
-      if (txResult.blockNumber === null) {
+      if (txResult?.blockNumber == null) {
         return false
       }
 
       const receipt = await web3.eth.getTransactionReceipt(txHash)
-      if (!receipt.status) {
+      if (!receipt?.status) {
         throw Error('TX status reverted')
       }
 
@@ -194,24 +201,30 @@ export const SafeDeployment = ({
 
     const awaitUntilSafeIsDeployed = async (safeCreationTxHash: string) => {
       try {
-        const web3 = getWeb3()
+        const web3 = getWeb3ReadOnly()
         const receipt = await web3.eth.getTransactionReceipt(safeCreationTxHash)
 
-        let safeAddress
+        let safeAddress = ''
 
-        if (receipt.events) {
+        if (receipt?.events) {
           safeAddress = receipt.events.ProxyCreation.returnValues.proxy
         } else {
           // If the node doesn't return the events we try to fetch it from logs
-          safeAddress = getNewSafeAddressFromLogs(receipt.logs)
+          safeAddress = getNewSafeAddressFromLogs(receipt?.logs || [])
         }
 
         setCreatedSafeAddress(safeAddress)
 
         interval = setInterval(async () => {
-          const code = await web3.eth.getCode(safeAddress)
+          let code = EMPTY_DATA
+          try {
+            code = await web3.eth.getCode(safeAddress)
+          } catch (err) {
+            console.log(err)
+          }
           if (code !== EMPTY_DATA) {
             setStepIndex(5)
+            setError(false)
           }
         }, 1000)
       } catch (error) {
@@ -278,6 +291,16 @@ export const SafeDeployment = ({
           </BodyInstruction>
         )}
 
+        {steps[stepIndex].instruction && creationTxHash ? (
+          <TxText>
+            Your Safe creation transaction:
+            <br />
+            <Center>
+              <PrefixedEthHashInfo hash={creationTxHash} showCopyBtn explorerUrl={getExplorerInfo(creationTxHash)} />
+            </Center>
+          </TxText>
+        ) : null}
+
         <BodyFooter>
           {FooterComponent ? (
             <FooterComponent
@@ -291,12 +314,6 @@ export const SafeDeployment = ({
           ) : null}
         </BodyFooter>
       </Body>
-
-      {stepIndex !== 0 && (
-        <BackButton color="primary" minWidth={140} onClick={onCancel} data-testid="safe-creation-back-btn">
-          Back
-        </BackButton>
-      )}
     </Wrapper>
   )
 }
@@ -367,6 +384,14 @@ const FullParagraph = styled(Paragraph)<FullParagraphProps>`
   transition: color 0.3s ease-in-out, background-color 0.3s ease-in-out;
 `
 
+const Center = styled.div`
+  display: flex;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  margin-bottom: -10px;
+`
+
 const BodyImage = styled.div`
   grid-row: 1;
 `
@@ -377,16 +402,18 @@ const BodyInstruction = styled.div`
   grid-row: 3;
   margin: 27px 0;
 `
-const BodyFooter = styled.div`
+
+const TxText = styled.div`
   grid-row: 4;
+  margin: 3em 0;
+  font-size: 0.8em;
+`
+
+const BodyFooter = styled.div`
+  grid-row: 5;
 
   padding: 10px 0;
   display: flex;
   justify-content: center;
   align-items: flex-end;
-`
-
-const BackButton = styled(Button)`
-  grid-column: 2;
-  margin: 20px auto 0;
 `

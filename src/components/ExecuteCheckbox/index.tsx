@@ -7,6 +7,8 @@ import { sm } from 'src/theme/variables'
 import Row from 'src/components/layout/Row'
 import Img from 'src/components/layout/Img'
 import InfoIcon from 'src/assets/icons/info.svg'
+import { trackEvent } from 'src/utils/googleTagManager'
+import { MODALS_EVENTS } from 'src/utils/events/modals'
 
 const StyledRow = styled(Row)`
   align-items: center;
@@ -23,17 +25,19 @@ const StyledFormControlLabel = styled(FormControlLabel)`
 `
 
 interface ExecuteCheckboxProps {
+  checked: boolean
   onChange: (val: boolean) => unknown
 }
 
-const ExecuteCheckbox = ({ onChange }: ExecuteCheckboxProps): ReactElement => {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    onChange(e.target.checked)
+const ExecuteCheckbox = ({ checked, onChange }: ExecuteCheckboxProps): ReactElement => {
+  const handleChange = (_: React.ChangeEvent<HTMLInputElement>, checked: boolean): void => {
+    trackEvent({ ...MODALS_EVENTS.EXECUTE_TX, label: checked })
+    onChange(checked)
   }
   return (
     <StyledRow>
       <StyledFormControlLabel
-        control={<Checkbox defaultChecked color="secondary" onChange={handleChange} />}
+        control={<Checkbox checked={checked} color="secondary" onChange={handleChange} />}
         label="Execute transaction"
         data-testid="execute-checkbox"
       />

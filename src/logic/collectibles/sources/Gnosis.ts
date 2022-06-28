@@ -80,7 +80,7 @@ class Gnosis {
   }
 
   static extractTokens(tokens: SafeCollectibleResponse[]): NFTTokens {
-    return tokens.map((token) => ({
+    const items = tokens.map((token) => ({
       assetAddress: token.address,
       color: 'red',
       description: token.description || '',
@@ -88,6 +88,7 @@ class Gnosis {
       name: token.name || '',
       tokenId: token.id,
     }))
+    return items
   }
 
   /**

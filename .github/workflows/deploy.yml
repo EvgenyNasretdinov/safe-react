@@ -17,7 +17,6 @@ env:
   REPO_NAME_ALPHANUMERIC: safereact
   STAGING_BUCKET_NAME: ${{ secrets.STAGING_BUCKET_NAME }}
   REACT_APP_SENTRY_DSN: ${{ secrets.SENTRY_DSN_MAINNET }}
-  REACT_APP_GOOGLE_ANALYTICS: ${{ secrets.REACT_APP_GOOGLE_ANALYTICS_ID_MAINNET }}
   REACT_APP_ETHERSCAN_API_KEY: ${{ secrets.REACT_APP_ETHERSCAN_API_KEY }}
   REACT_APP_ETHGASSTATION_API_KEY: ${{ secrets.REACT_APP_ETHGASSTATION_API_KEY }}
 
@@ -91,7 +90,11 @@ jobs:
           REACT_APP_SAFE_APPS_RPC_INFURA_TOKEN: ${{ secrets.REACT_APP_SAFE_APPS_RPC_INFURA_TOKEN }}
           REACT_APP_PORTIS_ID: ${{ secrets.REACT_APP_PORTIS_ID }}
           REACT_APP_INTERCOM_ID: ${{ secrets.REACT_APP_INTERCOM_ID }}
+          REACT_APP_BEAMER_ID: ${{ secrets.REACT_APP_BEAMER_ID }}
           REACT_APP_IPFS_GATEWAY: ${{ secrets.REACT_APP_IPFS_GATEWAY }}
+          REACT_APP_GOOGLE_TAG_MANAGER_ID: ${{ secrets.REACT_APP_GOOGLE_TAG_MANAGER_ID }}
+          REACT_APP_GOOGLE_TAG_MANAGER_LIVE_AUTH: ${{ secrets.REACT_APP_GOOGLE_TAG_MANAGER_LIVE_AUTH }}
+          REACT_APP_GOOGLE_TAG_MANAGER_DEVELOPMENT_AUTH: ${{ secrets.REACT_APP_GOOGLE_TAG_MANAGER_DEVELOPMENT_AUTH }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -114,8 +117,7 @@ jobs:
         with:
           message: |
             ## Deployment links
-            :orange_circle: [Rinkeby](${{ env.REVIEW_FEATURE_URL }}/rin) | :white_circle: [Mainnet](${{ env.REVIEW_FEATURE_URL }}/eth) | :purple_circle: [Polygon](${{ env.REVIEW_FEATURE_URL }}/matic) | :yellow_circle: [BSC](${{ env.REVIEW_FEATURE_URL }}/bnb) | :black_circle: [Arbitrum](${{ env.REVIEW_FEATURE_URL }}/arb1) | :green_circle: [Gnosis Chain](${{ env.REVIEW_FEATURE_URL }}/gno)
-            -|-|-|-|-|-
+            :white_circle: [Mainnet](${{ env.REVIEW_FEATURE_URL }}/eth) &nbsp;&nbsp;&nbsp; :purple_circle: [Polygon](${{ env.REVIEW_FEATURE_URL }}/matic) &nbsp;&nbsp;&nbsp; :orange_circle: [Rinkeby](${{ env.REVIEW_FEATURE_URL }}/rin)
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           repo-token-user-login: 'github-actions[bot]'
         if: success() && github.event.number
@@ -161,26 +163,17 @@ jobs:
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
   e2e:
-    name: Trigger e2e tests
-    if: success() && github.ref == 'refs/heads/dev'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Repository Dispatch
-        uses: peter-evans/repository-dispatch@v1
-        with:
-          token: ${{ secrets.E2E_RUN_HOOK_ACCESS_TOKEN }}
-          repository: gnosis/safe-react-e2e-tests
-          event-type: run-e2e-from-safe-react
-  e2ePR:
-    name: Trigger e2e tests on pr
+    runs-on: ubuntu-20.04
+    name: E2E on Chrome
     if: github.event.number
     needs: deploy
-    runs-on: ubuntu-latest
     steps:
-      - name: Repository Dispatch
-        uses: peter-evans/repository-dispatch@v1
+      - uses: actions/checkout@v2
+      - uses: cypress-io/github-action@v2
         with:
-          token: ${{ secrets.E2E_RUN_HOOK_ACCESS_TOKEN }}
-          repository: gnosis/safe-react-e2e-tests
-          event-type: run-e2e-tests-from-safe-react-on-pr
-          client-payload: '{"pr_number": "${{ github.event.number }}"}'
+          spec: cypress/integration/smoke/*.spec.js
+          browser: chrome
+          record: false
+          config: baseUrl=https://pr${{ github.event.number }}--safereact.review-safe.gnosisdev.com/app/
+        env:
+          CYPRESS_ENV: ${{ env.REACT_APP_ENV}}

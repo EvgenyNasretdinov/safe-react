@@ -4,7 +4,7 @@ import {
   Erc721Transfer,
   MultisigExecutionInfo,
   Operation,
-  TokenType,
+  TransactionTokenType,
 } from '@gnosis.pm/safe-react-gateway-sdk'
 import { useMemo, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -32,9 +32,10 @@ import {
   isMultisigExecutionInfo,
   Transaction,
 } from 'src/logic/safe/store/models/types/gateway.d'
-import { extractSafeAddress } from 'src/routes/routes'
 import { TxModalWrapper } from '../../helpers/TxModalWrapper'
-import { grantedSelector } from 'src/routes/safe/container/selector'
+
+import { grantedSelector, sameAddressAsSafeSelector } from 'src/routes/safe/container/selector'
+import useSafeAddress from 'src/logic/currentSession/hooks/useSafeAddress'
 
 export const REJECT_TX_MODAL_SUBMIT_BTN_TEST_ID = 'reject-tx-modal-submit-btn'
 
@@ -58,7 +59,7 @@ const getModalTitleAndDescription = (thresholdReached: boolean): { title: string
 
 const useTxInfo = (transaction: Props['transaction']) => {
   const t = useRef(transaction)
-  const safeAddress = extractSafeAddress()
+  const { safeAddress } = useSafeAddress()
 
   const confirmations = useMemo(
     () =>
@@ -127,7 +128,7 @@ const useTxInfo = (transaction: Props['transaction']) => {
   const value = useMemo(() => {
     switch (t.current.txInfo.type) {
       case 'Transfer':
-        if (t.current.txInfo.transferInfo.type === TokenType.NATIVE_COIN) {
+        if (t.current.txInfo.transferInfo.type === TransactionTokenType.NATIVE_COIN) {
           return t.current.txInfo.transferInfo.value
         } else {
           return t.current.txDetails.txData?.value ?? '0'
@@ -144,7 +145,7 @@ const useTxInfo = (transaction: Props['transaction']) => {
   const to = useMemo(() => {
     switch (t.current.txInfo.type) {
       case 'Transfer':
-        if (t.current.txInfo.transferInfo.type === TokenType.NATIVE_COIN) {
+        if (t.current.txInfo.transferInfo.type === TransactionTokenType.NATIVE_COIN) {
           return t.current.txInfo.recipient.value
         } else {
           return (t.current.txInfo.transferInfo as Erc20Transfer | Erc721Transfer).tokenAddress
@@ -197,8 +198,9 @@ export const ApproveTxModal = ({ onClose, isOpen, transaction }: Props): React.R
   const userAddress = useSelector(userAccountSelector)
   const isOwner = useSelector(grantedSelector)
   const classes = useStyles()
-  const safeAddress = extractSafeAddress()
+  const { safeAddress } = useSafeAddress()
   const txInfo = useTxInfo(transaction)
+  const submitDisabled = useSelector(sameAddressAsSafeSelector)
 
   const { executionInfo } = transaction
   const { confirmationsSubmitted = 0, confirmationsRequired = 0 } = isMultisigExecutionInfo(executionInfo)
@@ -240,6 +242,7 @@ export const ApproveTxModal = ({ onClose, isOpen, transaction }: Props): React.R
         safeTxGas={txInfo.safeTxGas}
         onSubmit={approveTx}
         onClose={onClose}
+        isSubmitDisabled={submitDisabled}
       >
         <ModalHeader onClose={onClose} title={title} />
 

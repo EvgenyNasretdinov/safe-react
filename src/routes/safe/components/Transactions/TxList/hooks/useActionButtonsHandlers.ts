@@ -13,9 +13,11 @@ import { useTransactionActions } from './useTransactionActions'
 import { TransactionActionStateContext } from 'src/routes/safe/components/Transactions/TxList/TxActionProvider'
 import { TxHoverContext } from 'src/routes/safe/components/Transactions/TxList/TxHoverProvider'
 import { TxLocationContext } from 'src/routes/safe/components/Transactions/TxList/TxLocationProvider'
-import enqueueSnackbar from 'src/logic/notifications/store/actions/enqueueSnackbar'
+import { showNotification } from 'src/logic/notifications/store/notifications'
 import { NOTIFICATIONS } from 'src/logic/notifications'
 import useTxStatus from 'src/logic/hooks/useTxStatus'
+import { trackEvent } from 'src/utils/googleTagManager'
+import { TX_LIST_EVENTS } from 'src/utils/events/txList'
 
 type ActionButtonsHandlers = {
   canCancel: boolean
@@ -46,12 +48,16 @@ export const useActionButtonsHandlers = (transaction: Transaction): ActionButton
           (canExecute && details.confirmationsRequired > details.confirmations.length) ||
           (canConfirmThenExecute && details.confirmationsRequired - 1 > details.confirmations.length)
         ) {
-          dispatch(enqueueSnackbar(NOTIFICATIONS.TX_FETCH_SIGNATURES_ERROR_MSG))
+          dispatch(showNotification(NOTIFICATIONS.TX_FETCH_SIGNATURES_ERROR_MSG))
           return
         }
       }
+      const actionSelected = canExecute || canConfirmThenExecute ? 'execute' : 'confirm'
+
+      trackEvent(TX_LIST_EVENTS[actionSelected.toUpperCase()])
+
       actionContext.current.selectAction({
-        actionSelected: canExecute || canConfirmThenExecute ? 'execute' : 'confirm',
+        actionSelected,
         transactionId: transaction.id,
       })
     },
@@ -61,6 +67,9 @@ export const useActionButtonsHandlers = (transaction: Transaction): ActionButton
   const handleCancelButtonClick = useCallback(
     (event: ReactMouseEvent<HTMLButtonElement, MouseEvent>) => {
       event.stopPropagation()
+
+      trackEvent(TX_LIST_EVENTS.REJECT)
+
       actionContext.current.selectAction({
         actionSelected: 'cancel',
         transactionId: transaction.id,

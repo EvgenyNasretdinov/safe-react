@@ -5,15 +5,17 @@ import { getWeb3 } from 'src/logic/wallets/getWeb3'
 import { GnosisSafe } from 'src/types/contracts/gnosis_safe.d'
 import { logError, Errors } from '../exceptions/CodedException'
 
-export const decodeMessage = (message: string): string => {
+const GENERIC_FAILED_TX_MSG = 'unable to decode contract error message'
+
+export const decodeMessage = (message: string): string | null => {
   const code = CONTRACT_ERROR_CODES.find((code) => {
     return message.toUpperCase().includes(code.toUpperCase())
   })
 
-  return code ? `${code}: ${CONTRACT_ERRORS[code]}` : message
+  return code ? `${code}: ${CONTRACT_ERRORS[code]}` : null
 }
 
-const getContractErrorMessage = async ({
+export const getContractErrorMessage = async ({
   safeInstance,
   from,
   data,
@@ -21,7 +23,7 @@ const getContractErrorMessage = async ({
   safeInstance: GnosisSafe
   from: string
   data: string
-}): Promise<string | null> => {
+}): Promise<string | undefined> => {
   const web3 = getWeb3()
 
   try {
@@ -35,27 +37,9 @@ const getContractErrorMessage = async ({
     const returnBuffer = Buffer.from(returnData.slice(2), 'hex')
 
     const contractOutput = abi.rawDecode(['string'], returnBuffer.slice(4))[0]
-    return decodeMessage(contractOutput)
+    return decodeMessage(contractOutput) || contractOutput
   } catch (err) {
     logError(Errors._817, err.message)
-    return null
+    return GENERIC_FAILED_TX_MSG
   }
-}
-
-export const fetchOnchainError = async (
-  data: string,
-  safeInstance: GnosisSafe,
-  from: string,
-): Promise<string | null> => {
-  const contractErrorMessage = await getContractErrorMessage({
-    safeInstance,
-    from,
-    data,
-  })
-
-  if (contractErrorMessage) {
-    logError(Errors._803, contractErrorMessage)
-  }
-
-  return contractErrorMessage
 }
