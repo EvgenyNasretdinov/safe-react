@@ -18,9 +18,15 @@ import { currentCurrencySelector } from 'src/logic/currencyValues/store/selector
 import Modal from 'src/components/Modal'
 import SendModal from 'src/routes/safe/components/Balances/SendModal'
 import useSafeActions from 'src/logic/safe/hooks/useSafeActions'
+
+import useDAAActions from 'src/logic/daa/hooks/useDAAActions'
+import { currentChainId } from 'src/logic/config/store/selectors'
+import { userAccountSelector } from 'src/logic/wallets/store/selectors'
+
 import { formatAmountInUsFormat } from 'src/logic/tokens/utils/formatAmount'
 import { grantedSelector } from 'src/routes/safe/container/selector'
 import ReceiveModal from './ReceiveModal'
+import DAAModal from './DAAModal'
 import { useSidebarItems } from 'src/components/AppLayout/Sidebar/useSidebarItems'
 import useAddressBookSync from 'src/logic/addressBook/hooks/useAddressBookSync'
 
@@ -51,8 +57,15 @@ const useStyles = makeStyles(notificationStyles)
 const App: React.FC = ({ children }) => {
   const classes = useStyles()
   const { toggleSidebar } = useContext(SafeListSidebarContext)
-  const { name: safeName, totalFiatBalance: currentSafeBalance } = useSelector(currentSafeWithNames)
+  const { name: safeName, totalFiatBalance: currentSafeBalance, owners } = useSelector(currentSafeWithNames)
   const { safeActionsState, onShow, onHide, showSendFunds, hideSendFunds } = useSafeActions()
+
+  const { showSixDigitCode, hideSixDigitCode, daaActionsState } = useDAAActions()
+  const userAddress = useSelector(userAccountSelector)
+  const chainId = useSelector(currentChainId)
+  const userOwner = owners.find((owner) => owner.address == userAddress)
+  const userName = userOwner ? userOwner.name : ''
+
   const currentCurrency = useSelector(currentCurrencySelector)
   const granted = useSelector(grantedSelector)
   const sidebarItems = useSidebarItems()
@@ -61,6 +74,7 @@ const App: React.FC = ({ children }) => {
   useAddressBookSync()
 
   const sendFunds = safeActionsState.sendFunds
+  const sixDigitCode = daaActionsState.sixDigitCode
   const formattedTotalBalance = currentSafeBalance ? formatAmountInUsFormat(currentSafeBalance.toString()) : ''
   const balance =
     !!formattedTotalBalance && !!currentCurrency ? `${formattedTotalBalance} ${currentCurrency}` : undefined
@@ -98,6 +112,9 @@ const App: React.FC = ({ children }) => {
             onToggleSafeList={toggleSidebar}
             onReceiveClick={onReceiveShow}
             onNewTransactionClick={() => showSendFunds('')}
+            onGenerateSixDigitCodeClick={async () => {
+              await showSixDigitCode(safeAddress, safeName, userAddress, userName, chainId)
+            }}
           >
             {children}
           </AppLayout>
@@ -108,6 +125,15 @@ const App: React.FC = ({ children }) => {
             onClose={hideSendFunds}
             selectedToken={sendFunds.selectedToken}
           />
+
+          <Modal
+            open={sixDigitCode.isOpen}
+            handleClose={hideSixDigitCode}
+            description="DAA six digit code for investor"
+            title="DAA six digit code"
+          >
+            <DAAModal code={sixDigitCode.code} onClose={hideSixDigitCode} />
+          </Modal>
 
           {safeAddress && (
             <Modal

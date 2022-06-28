@@ -14,5 +14,6 @@ export const SimpleLayout = (): React.ReactElement => (
     onToggleSafeList={() => ({})}
     onReceiveClick={console.log}
     onNewTransactionClick={console.log}
+    onGenerateSixDigitCodeClick={console.log}
   />
 )

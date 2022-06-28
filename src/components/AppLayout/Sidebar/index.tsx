@@ -47,6 +47,7 @@ type Props = {
   onToggleSafeList: () => void
   onReceiveClick: () => void
   onNewTransactionClick: () => void
+  onGenerateSixDigitCodeClick: () => void
   items: ListItemType[]
 }
 
@@ -66,6 +67,7 @@ const Sidebar = ({
   onToggleSafeList,
   onReceiveClick,
   onNewTransactionClick,
+  onGenerateSixDigitCodeClick,
 }: Props): React.ReactElement => {
   const devTools = useMemo(() => lazyLoad('./DevTools'), [])
   const debugToggle = useMemo(() => lazyLoad('./DebugToggle'), [])
@@ -79,6 +81,7 @@ const Sidebar = ({
         onToggleSafeList={onToggleSafeList}
         onReceiveClick={onReceiveClick}
         onNewTransactionClick={onNewTransactionClick}
+        onGenerateSixDigitCodeClick={onGenerateSixDigitCodeClick}
       />
 
       {items.length ? (

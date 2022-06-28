@@ -52,6 +52,7 @@ export const Base = (): React.ReactElement => {
       onToggleSafeList={() => console.log}
       onReceiveClick={() => console.log}
       onNewTransactionClick={() => console.log}
+      onGenerateSixDigitCodeClick={() => console.log}
     >
       <div>The content goes here</div>
     </Layout>

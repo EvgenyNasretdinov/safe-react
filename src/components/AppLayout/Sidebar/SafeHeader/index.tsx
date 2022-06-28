@@ -66,6 +66,7 @@ const StyledButton = styled(Button)`
   *:first-child {
     margin: 0 4px 0 0;
   }
+  margin: 4px;
 `
 
 type StyledTextLabelProps = {
@@ -116,6 +117,7 @@ type Props = {
   onToggleSafeList: () => void
   onReceiveClick: () => void
   onNewTransactionClick: () => void
+  onGenerateSixDigitCodeClick: () => void
 }
 
 const SafeHeader = ({
@@ -126,6 +128,7 @@ const SafeHeader = ({
   onToggleSafeList,
   onReceiveClick,
   onNewTransactionClick,
+  onGenerateSixDigitCodeClick,
 }: Props): React.ReactElement => {
   const copyChainPrefix = useSelector(copyShortNameSelector)
   const shortName = extractShortChainName()
@@ -190,6 +193,18 @@ const SafeHeader = ({
           <FixedIcon type="arrowSentWhite" />
           <Text size="xl" color="white">
             New transaction
+          </Text>
+        </StyledButton>
+        <StyledButton
+          size="md"
+          disabled={!granted}
+          color="primary"
+          variant="contained"
+          onClick={onGenerateSixDigitCodeClick}
+        >
+          <FixedIcon type="arrowSentWhite" />
+          <Text size="md" color="white">
+            DAA: Generate 6 digit code
           </Text>
         </StyledButton>
       </Container>

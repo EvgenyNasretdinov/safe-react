@@ -47,6 +47,7 @@ export const Base = (): React.ReactElement => (
     granted={true}
     onReceiveClick={console.log}
     onNewTransactionClick={console.log}
+    onGenerateSixDigitCodeClick={console.log}
     onToggleSafeList={() => console.log}
   />
 )

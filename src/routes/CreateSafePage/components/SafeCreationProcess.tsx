@@ -213,9 +213,11 @@ function SafeCreationProcess(): ReactElement {
     const safeProps = await buildSafe(newSafeAddress)
     await dispatch(addOrUpdateSafe(safeProps))
 
+    const safeAddress = safeProps.address
+
     setShowModal(true)
     setModalData({
-      safeAddress: safeProps.address,
+      safeAddress,
       safeName,
       safeCreationTxHash,
     })

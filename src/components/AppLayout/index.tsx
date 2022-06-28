@@ -78,6 +78,7 @@ type Props = {
   onToggleSafeList: () => void
   onReceiveClick: () => void
   onNewTransactionClick: () => void
+  onGenerateSixDigitCodeClick: () => void
 }
 
 const Layout: React.FC<Props> = ({
@@ -88,6 +89,7 @@ const Layout: React.FC<Props> = ({
   onToggleSafeList,
   onReceiveClick,
   onNewTransactionClick,
+  onGenerateSixDigitCodeClick,
   children,
   sidebarItems,
 }): React.ReactElement => {
@@ -117,6 +119,7 @@ const Layout: React.FC<Props> = ({
             onToggleSafeList={onToggleSafeList}
             onReceiveClick={onReceiveClick}
             onNewTransactionClick={onNewTransactionClick}
+            onGenerateSixDigitCodeClick={onGenerateSixDigitCodeClick}
           />
         </SidebarWrapper>
         <ContentWrapper>
