@@ -122,6 +122,7 @@ type Props = {
   onReceiveClick: () => void
   onNewTransactionClick: () => void
   onGenerateSixDigitCodeClick: () => void
+  onGetInvestorAddressClick: () => void
 }
 
 const Layout: React.FC<Props> = ({
@@ -133,6 +134,7 @@ const Layout: React.FC<Props> = ({
   onReceiveClick,
   onNewTransactionClick,
   onGenerateSixDigitCodeClick,
+  onGetInvestorAddressClick,
   children,
   sidebarItems,
 }): React.ReactElement => {
@@ -176,6 +178,7 @@ const Layout: React.FC<Props> = ({
               onReceiveClick={onReceiveClick}
               onNewTransactionClick={onNewTransactionClick}
               onGenerateSixDigitCodeClick={onGenerateSixDigitCodeClick}
+              onGetInvestorAddressClick={onGetInvestorAddressClick}
             />
           </SidebarWrapper>
         )}

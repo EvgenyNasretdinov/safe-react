@@ -202,6 +202,7 @@ type Props = {
   onReceiveClick: () => void
   onNewTransactionClick: () => void
   onGenerateSixDigitCodeClick: () => void
+  onGetInvestorAddressClick: () => void
 }
 
 const SafeHeader = ({
@@ -213,6 +214,7 @@ const SafeHeader = ({
   onReceiveClick,
   onNewTransactionClick,
   onGenerateSixDigitCodeClick,
+  onGetInvestorAddressClick,
 }: Props): React.ReactElement => {
   const { owners, threshold } = useSelector(currentSafe)
   const copyChainPrefix = useSelector(copyShortNameSelector)
@@ -302,6 +304,17 @@ const SafeHeader = ({
         >
           <Text size="md" color="white">
             DAA: Generate 6 digit code
+          </Text>
+        </StyledButton>
+        <StyledButton
+          size="md"
+          disabled={!granted}
+          color="primary"
+          variant="contained"
+          onClick={onGetInvestorAddressClick}
+        >
+          <Text size="md" color="white">
+            DAA: Get investor&apos;s address
           </Text>
         </StyledButton>
       </Container>

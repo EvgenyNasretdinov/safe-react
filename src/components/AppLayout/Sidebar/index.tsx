@@ -64,6 +64,7 @@ type Props = {
   onReceiveClick: () => void
   onNewTransactionClick: () => void
   onGenerateSixDigitCodeClick: () => void
+  onGetInvestorAddressClick: () => void
   items: ListItemType[]
 }
 
@@ -86,6 +87,7 @@ const Sidebar = ({
   onReceiveClick,
   onNewTransactionClick,
   onGenerateSixDigitCodeClick,
+  onGetInvestorAddressClick,
 }: Props): React.ReactElement => {
   const debugToggle = useMemo(() => (IS_PRODUCTION ? null : lazyLoad('./DebugToggle')), [])
   const dispatch = useDispatch()
@@ -117,6 +119,7 @@ const Sidebar = ({
         onReceiveClick={onReceiveClick}
         onNewTransactionClick={onNewTransactionClick}
         onGenerateSixDigitCodeClick={onGenerateSixDigitCodeClick}
+        onGetInvestorAddressClick={onGetInvestorAddressClick}
       />
 
       {items.length ? (

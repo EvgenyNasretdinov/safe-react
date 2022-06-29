@@ -18,7 +18,8 @@ import { userAccountSelector } from 'src/logic/wallets/store/selectors'
 import { formatCurrency } from 'src/logic/tokens/utils/formatAmount'
 import { grantedSelector } from 'src/routes/safe/container/selector'
 import ReceiveModal from './ReceiveModal'
-import DAAModal from './DAAModal'
+import GenerateSixDigitCodeModal from '../DAA/GenerateSixDigitCodeModal'
+import GetInvestorAddressModal from '../DAA/GetInvestorAddressModal'
 import { useSidebarItems } from 'src/components/AppLayout/Sidebar/useSidebarItems'
 import useAddressBookSync from 'src/logic/addressBook/hooks/useAddressBookSync'
 import { useCurrentSafeAddressSync } from 'src/logic/currentSession/hooks/useCurrentSafeAddressSync'
@@ -35,7 +36,8 @@ const App: React.FC = ({ children }) => {
   const { name: safeName, totalFiatBalance: currentSafeBalance, owners } = useSelector(currentSafeWithNames)
   const { safeActionsState, onShow, onHide, showSendFunds, hideSendFunds } = useSafeActions()
 
-  const { showSixDigitCode, hideSixDigitCode, daaActionsState } = useDAAActions()
+  const { showSixDigitCode, hideSixDigitCode, showGetInvestorAddress, hideGetInvestorAddress, daaActionsState } =
+    useDAAActions()
   const userAddress = useSelector(userAccountSelector)
   const chainId = useSelector(currentChainId)
   const userOwner = owners.find((owner) => owner.address == userAddress)
@@ -51,6 +53,7 @@ const App: React.FC = ({ children }) => {
 
   const sendFunds = safeActionsState.sendFunds
   const sixDigitCode = daaActionsState.sixDigitCode
+  const investorAddress = daaActionsState.investorAddress
   const balance = formatCurrency(currentSafeBalance.toString(), currentCurrency)
 
   const onReceiveShow = () => onShow('Receive')
@@ -70,6 +73,9 @@ const App: React.FC = ({ children }) => {
         onGenerateSixDigitCodeClick={async () => {
           await showSixDigitCode(safeAddress, safeName, userAddress, userName, chainId)
         }}
+        onGetInvestorAddressClick={async () => {
+          await showGetInvestorAddress(userAddress, safeAddress, chainId)
+        }}
       >
         {children}
       </AppLayout>
@@ -87,8 +93,18 @@ const App: React.FC = ({ children }) => {
         description="DAA six digit code for investor"
         title="DAA six digit code"
       >
-        <DAAModal code={sixDigitCode.code} onClose={hideSixDigitCode} />
+        <GenerateSixDigitCodeModal code={sixDigitCode.code} onClose={hideSixDigitCode} />
       </Modal>
+
+      <Modal
+        open={investorAddress.isOpen}
+        handleClose={hideGetInvestorAddress}
+        description="DAA six digit code for investor"
+        title="Investor address"
+      >
+        <GetInvestorAddressModal address={investorAddress.address} onClose={hideGetInvestorAddress} />
+      </Modal>
+
       {safeAddress && (
         <Modal
           description="Receive Tokens Form"

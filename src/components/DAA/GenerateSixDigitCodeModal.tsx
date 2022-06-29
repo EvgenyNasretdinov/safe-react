@@ -75,7 +75,7 @@ type Props = {
   code: string | undefined
 }
 
-const DAAModal = ({ onClose, code }: Props): ReactElement => {
+const GenerateSixDigitCodeModal = ({ onClose, code }: Props): ReactElement => {
   const chainInfo = getChainInfo()
   const classes = useStyles(chainInfo)
 
@@ -107,4 +107,4 @@ const DAAModal = ({ onClose, code }: Props): ReactElement => {
   )
 }
 
-export default DAAModal
+export default GenerateSixDigitCodeModal

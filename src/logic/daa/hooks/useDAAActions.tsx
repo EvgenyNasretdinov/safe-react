@@ -1,11 +1,15 @@
 import { useState } from 'react'
 
-import { generateSixDigitCode } from 'src/logic/daa/actions'
+import { generateSixDigitCode, getInvestorAddressByAdvisor } from 'src/logic/daa/actions'
 
 type DAAActionsState = {
   sixDigitCode: {
     isOpen: boolean
     code?: string
+  }
+  investorAddress: {
+    isOpen: boolean
+    address?: string
   }
 }
 
@@ -13,6 +17,10 @@ const INITIAL_STATE: DAAActionsState = {
   sixDigitCode: {
     isOpen: false,
     code: undefined,
+  },
+  investorAddress: {
+    isOpen: false,
+    address: undefined,
   },
 }
 
@@ -25,6 +33,8 @@ type Response = {
     chainId: string,
   ) => void
   hideSixDigitCode: () => void
+  showGetInvestorAddress: (advisorAddress: string, safeAddress: string, chainId: string) => void
+  hideGetInvestorAddress: () => void
   daaActionsState: DAAActionsState
 }
 
@@ -64,7 +74,32 @@ const useSafeActions = (): Response => {
     }))
   }
 
-  return { daaActionsState, hideSixDigitCode, showSixDigitCode }
+  const showGetInvestorAddress = async (advisorAddress: string, safeAddress: string, chainId: string) => {
+    const address = await getInvestorAddressByAdvisor({
+      safeAddress,
+      advisorAddress,
+      chainId,
+    })
+    setDAAActionsState((prevState) => ({
+      ...prevState,
+      investorAddress: {
+        isOpen: true,
+        address,
+      },
+    }))
+  }
+
+  const hideGetInvestorAddress = () => {
+    setDAAActionsState((prevState) => ({
+      ...prevState,
+      investorAddress: {
+        isOpen: false,
+        address: prevState.investorAddress.address,
+      },
+    }))
+  }
+
+  return { daaActionsState, hideSixDigitCode, showSixDigitCode, showGetInvestorAddress, hideGetInvestorAddress }
 }
 
 export default useSafeActions
