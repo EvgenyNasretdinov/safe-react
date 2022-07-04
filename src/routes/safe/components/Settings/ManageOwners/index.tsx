@@ -4,6 +4,7 @@ import TableCell from '@material-ui/core/TableCell'
 import TableContainer from '@material-ui/core/TableContainer'
 import TableRow from '@material-ui/core/TableRow'
 import cn from 'classnames'
+import { useLocation } from 'react-router-dom'
 
 import { AddOwnerModal } from './AddOwnerModal'
 import { EditOwnerModal } from './EditOwnerModal'
@@ -43,11 +44,17 @@ const ManageOwners = ({ granted, owners }: Props): ReactElement => {
   const classes = useStyles()
 
   const [selectedOwner, setSelectedOwner] = useState<OwnerData | undefined>()
+
+  const { state } = useLocation()
+  const { manageOwnersState, addOwnerPlaceholder } =
+    (state as { manageOwnersState: OwnerData; addOwnerPlaceholder: string }) || {}
+
   const [modalsStatus, setModalStatus] = useState({
     showAddOwner: false,
     showRemoveOwner: false,
     showReplaceOwner: false,
     showEditOwner: false,
+    ...manageOwnersState,
   })
 
   const onShow = (action, row?: OwnerData) => () => {
@@ -167,7 +174,11 @@ const ManageOwners = ({ granted, owners }: Props): ReactElement => {
           </Row>
         </>
       )}
-      <AddOwnerModal isOpen={modalsStatus.showAddOwner} onClose={onHide('AddOwner')} />
+      <AddOwnerModal
+        isOpen={modalsStatus.showAddOwner}
+        onClose={onHide('AddOwner')}
+        ownerPlaceholder={addOwnerPlaceholder}
+      />
       {selectedOwner && (
         <>
           <RemoveOwnerModal

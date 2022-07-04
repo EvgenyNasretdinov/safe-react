@@ -120,6 +120,8 @@ const Settings = (): React.ReactElement => {
                 exact
                 render={() => <ManageOwners granted={granted} owners={owners} />}
               />
+              {/* history.push(generateSafeRoute(SAFE_ROUTES.ASSETS_BALANCES, extractPrefixedSafeAddress())) */}
+
               <Route path={SAFE_ROUTES.SETTINGS_POLICIES} exact render={() => <ThresholdSettings />} />
               <Route path={SAFE_ROUTES.SETTINGS_SPENDING_LIMIT} exact render={() => <SpendingLimitSettings />} />
               <Route path={SAFE_ROUTES.SETTINGS_ADVANCED} exact render={() => <Advanced />} />

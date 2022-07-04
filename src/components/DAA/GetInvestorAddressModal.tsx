@@ -5,12 +5,14 @@ import Close from '@material-ui/icons/Close'
 import { ReactElement } from 'react'
 import { CopyToClipboardBtn } from '@gnosis.pm/safe-react-components'
 
+import { history, SAFE_ROUTES, generateSafeRoute } from 'src/routes/routes'
 import Hairline from 'src/components/layout/Hairline'
 import Paragraph from 'src/components/layout/Paragraph'
 import Row from 'src/components/layout/Row'
 import { border, fontColor, lg, md, screenSm, secondaryText } from 'src/theme/variables'
 import { getChainInfo } from 'src/config'
 import { ChainInfo } from '@gnosis.pm/safe-react-gateway-sdk'
+import useSafeAddress from 'src/logic/currentSession/hooks/useSafeAddress'
 
 const useStyles = (chainInfo: ChainInfo) =>
   makeStyles(
@@ -78,6 +80,7 @@ type Props = {
 const GetInvestorAddressModal = ({ onClose, address }: Props): ReactElement => {
   const chainInfo = getChainInfo()
   const classes = useStyles(chainInfo)
+  const { shortName, safeAddress } = useSafeAddress()
 
   return (
     <>
@@ -91,7 +94,7 @@ const GetInvestorAddressModal = ({ onClose, address }: Props): ReactElement => {
       </Row>
       <Hairline />
       {address ? (
-        <div>
+        <>
           <Row align="center" className={classes.code} grow>
             <Paragraph className={classes.annotation} noMargin size="lg">
               Investor was registered! Here&apos;s the address:
@@ -101,7 +104,28 @@ const GetInvestorAddressModal = ({ onClose, address }: Props): ReactElement => {
             <Paragraph>{address}</Paragraph>
             <CopyToClipboardBtn textToCopy={address} />
           </Row>
-        </div>
+          <Row align="center" className={classes.buttonRow}>
+            <Button
+              size="md"
+              color="primary"
+              onClick={() => {
+                history.push({
+                  pathname: generateSafeRoute(SAFE_ROUTES.SETTINGS_OWNERS, { safeAddress, shortName }),
+                  state: {
+                    manageOwnersState: {
+                      showAddOwner: true,
+                    },
+                    addOwnerPlaceholder: address,
+                  },
+                })
+                onClose()
+              }}
+              variant="contained"
+            >
+              Add as a new owner for the current selected safe
+            </Button>
+          </Row>
+        </>
       ) : (
         <Paragraph className={classes.annotation} noMargin size="lg">
           Looks like the Investor is not registered yet, try to check for the address later
@@ -110,7 +134,7 @@ const GetInvestorAddressModal = ({ onClose, address }: Props): ReactElement => {
       <Hairline />
       <Row align="center" className={classes.buttonRow}>
         <Button size="md" color="primary" onClick={onClose} variant="contained">
-          Done
+          Close
         </Button>
       </Row>
     </>

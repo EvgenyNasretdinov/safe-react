@@ -66,11 +66,16 @@ export const sendAddOwner = async (
 type Props = {
   isOpen: boolean
   onClose: () => void
+  ownerPlaceholder: string | undefined
 }
 
-export const AddOwnerModal = ({ isOpen, onClose }: Props): React.ReactElement => {
+export const AddOwnerModal = ({ isOpen, onClose, ownerPlaceholder }: Props): React.ReactElement => {
   const [activeScreen, setActiveScreen] = useState('selectOwner')
-  const [values, setValues] = useState<OwnerValues>({ ownerName: '', ownerAddress: '', threshold: '' })
+  const [values, setValues] = useState<OwnerValues>({
+    ownerName: '',
+    ownerAddress: ownerPlaceholder || '',
+    threshold: '',
+  })
   const dispatch = useDispatch()
   const { safeAddress } = useSafeAddress()
   const safeVersion = useSelector(currentSafeCurrentVersion)
